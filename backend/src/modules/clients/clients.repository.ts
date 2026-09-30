@@ -1,4 +1,4 @@
-import { eq, or, ilike, desc, sql, count } from "drizzle-orm";
+import { eq, or, ilike, desc, count } from "drizzle-orm";
 import { NodePgDatabase } from "drizzle-orm/node-postgres";
 import * as schema from "../../db/schema/index.js";
 import { clients, Client } from "../../db/schema/clients.js";
