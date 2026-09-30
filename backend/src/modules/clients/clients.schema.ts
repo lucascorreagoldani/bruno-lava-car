@@ -11,6 +11,24 @@ export const createClientBodySchema = z.object({
     .max(30, "Telefone não pode exceder 30 caracteres")
 });
 
+export const updateClientBodySchema = z
+  .object({
+    fullName: z
+      .string()
+      .min(2, "Nome deve conter no mínimo 2 caracteres")
+      .max(150, "Nome não pode exceder 150 caracteres")
+      .optional(),
+    phone: z
+      .string()
+      .min(7, "Telefone deve conter no mínimo 7 caracteres")
+      .max(30, "Telefone não pode exceder 30 caracteres")
+      .optional()
+  })
+  .refine(
+    (data) => data.fullName !== undefined || data.phone !== undefined,
+    { message: "Pelo menos um campo deve ser fornecido para atualização." }
+  );
+
 export const listClientsQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(100).default(10),
@@ -22,5 +40,6 @@ export const clientIdParamSchema = z.object({
 });
 
 export type CreateClientInput = z.infer<typeof createClientBodySchema>;
+export type UpdateClientInput = z.infer<typeof updateClientBodySchema>;
 export type ListClientsQuery = z.infer<typeof listClientsQuerySchema>;
 export type ClientIdParam = z.infer<typeof clientIdParamSchema>;

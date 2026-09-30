@@ -63,6 +63,38 @@ export async function clientsRoutes(app: FastifyInstance) {
             limit: { type: "number", default: 10 },
             search: { type: "string" }
           }
+        },
+        response: {
+          200: {
+            type: "object",
+            properties: {
+              statusCode: { type: "number" },
+              message: { type: "string" },
+              data: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    id: { type: "number" },
+                    fullName: { type: "string" },
+                    phone: { type: "string" },
+                    formattedPhone: { type: "string" },
+                    createdAt: { type: "string" },
+                    updatedAt: { type: "string" }
+                  }
+                }
+              },
+              pagination: {
+                type: "object",
+                properties: {
+                  page: { type: "number" },
+                  limit: { type: "number" },
+                  total: { type: "number" },
+                  totalPages: { type: "number" }
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -75,11 +107,32 @@ export async function clientsRoutes(app: FastifyInstance) {
       schema: {
         tags: ["Clientes"],
         summary: "Buscar cliente por ID",
+        description: "Localiza os dados de um cliente específico pelo ID.",
         params: {
           type: "object",
           required: ["id"],
           properties: {
             id: { type: "number" }
+          }
+        },
+        response: {
+          200: {
+            type: "object",
+            properties: {
+              statusCode: { type: "number" },
+              message: { type: "string" },
+              data: {
+                type: "object",
+                properties: {
+                  id: { type: "number" },
+                  fullName: { type: "string" },
+                  phone: { type: "string" },
+                  formattedPhone: { type: "string" },
+                  createdAt: { type: "string" },
+                  updatedAt: { type: "string" }
+                }
+              }
+            }
           }
         }
       }
@@ -100,9 +153,124 @@ export async function clientsRoutes(app: FastifyInstance) {
           properties: {
             id: { type: "number" }
           }
+        },
+        response: {
+          200: {
+            type: "object",
+            properties: {
+              statusCode: { type: "number" },
+              message: { type: "string" },
+              data: {
+                type: "object",
+                properties: {
+                  client: {
+                    type: "object",
+                    properties: {
+                      id: { type: "number" },
+                      fullName: { type: "string" },
+                      phone: { type: "string" },
+                      createdAt: { type: "string" },
+                      updatedAt: { type: "string" }
+                    }
+                  },
+                  vehicles: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        plate: { type: "string" },
+                        clientId: { type: "number" },
+                        brand: { type: "string" },
+                        model: { type: "string" },
+                        color: { type: "string" },
+                        year: { type: "number" },
+                        category: { type: "string" },
+                        createdAt: { type: "string" },
+                        updatedAt: { type: "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
       }
     },
     (request, reply) => clientsController.getVehicles(request, reply)
+  );
+
+  app.put(
+    "/clients/:id",
+    {
+      schema: {
+        tags: ["Clientes"],
+        summary: "Atualizar cliente",
+        description: "Atualiza os dados de um cliente.",
+        params: {
+          type: "object",
+          required: ["id"],
+          properties: {
+            id: { type: "number" }
+          }
+        },
+        body: {
+          type: "object",
+          properties: {
+            fullName: { type: "string", example: "Lucas Corrêa Goldani" },
+            phone: { type: "string", example: "(+55) 55 9 9655-8820" }
+          }
+        },
+        response: {
+          200: {
+            type: "object",
+            properties: {
+              statusCode: { type: "number" },
+              message: { type: "string" },
+              data: {
+                type: "object",
+                properties: {
+                  id: { type: "number" },
+                  fullName: { type: "string" },
+                  phone: { type: "string" },
+                  formattedPhone: { type: "string" },
+                  createdAt: { type: "string" },
+                  updatedAt: { type: "string" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    (request, reply) => clientsController.update(request, reply)
+  );
+
+  app.delete(
+    "/clients/:id",
+    {
+      schema: {
+        tags: ["Clientes"],
+        summary: "Remover cliente",
+        description: "Remove um cliente e seus respectivos veículos.",
+        params: {
+          type: "object",
+          required: ["id"],
+          properties: {
+            id: { type: "number" }
+          }
+        },
+        response: {
+          200: {
+            type: "object",
+            properties: {
+              statusCode: { type: "number" },
+              message: { type: "string" }
+            }
+          }
+        }
+      }
+    },
+    (request, reply) => clientsController.delete(request, reply)
   );
 }

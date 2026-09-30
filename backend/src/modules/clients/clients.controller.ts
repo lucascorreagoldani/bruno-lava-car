@@ -2,6 +2,7 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import { ClientsService } from "./clients.service.js";
 import {
   createClientBodySchema,
+  updateClientBodySchema,
   listClientsQuerySchema,
   clientIdParamSchema
 } from "./clients.schema.js";
@@ -56,6 +57,28 @@ export class ClientsController {
       statusCode: 200,
       message: "Veículos do cliente localizados com sucesso",
       data: result
+    });
+  }
+
+  async update(request: FastifyRequest, reply: FastifyReply) {
+    const { id } = clientIdParamSchema.parse(request.params);
+    const parsedBody = updateClientBodySchema.parse(request.body);
+    const client = await this.clientsService.updateClient(id, parsedBody);
+
+    return reply.status(200).send({
+      statusCode: 200,
+      message: "Cliente atualizado com sucesso",
+      data: client
+    });
+  }
+
+  async delete(request: FastifyRequest, reply: FastifyReply) {
+    const { id } = clientIdParamSchema.parse(request.params);
+    await this.clientsService.deleteClient(id);
+
+    return reply.status(200).send({
+      statusCode: 200,
+      message: "Cliente removido com sucesso"
     });
   }
 }

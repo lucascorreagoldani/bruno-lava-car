@@ -5,6 +5,7 @@ import { clients, Client } from "../../db/schema/clients.js";
 import {
   ClientsRepositoryContract,
   CreateClientDTO,
+  UpdateClientDTO,
   PaginationParams,
   PaginatedResult,
   ClientWithVehicles
@@ -94,5 +95,27 @@ export class DrizzleClientsRepository implements ClientsRepositoryContract {
     });
 
     return result || null;
+  }
+
+  async update(id: number, data: UpdateClientDTO): Promise<Client | null> {
+    const [updated] = await this.database
+      .update(clients)
+      .set({
+        ...data,
+        updatedAt: new Date()
+      })
+      .where(eq(clients.id, id))
+      .returning();
+
+    return updated || null;
+  }
+
+  async delete(id: number): Promise<boolean> {
+    const deleted = await this.database
+      .delete(clients)
+      .where(eq(clients.id, id))
+      .returning({ id: clients.id });
+
+    return deleted.length > 0;
   }
 }

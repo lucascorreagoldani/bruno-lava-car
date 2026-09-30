@@ -1,4 +1,10 @@
-import { ClientsRepositoryContract, CreateClientDTO, PaginationParams, PaginatedResult } from "./clients.contract.js";
+import {
+  ClientsRepositoryContract,
+  CreateClientDTO,
+  UpdateClientDTO,
+  PaginationParams,
+  PaginatedResult
+} from "./clients.contract.js";
 import { Client } from "../../db/schema/clients.js";
 import { Vehicle } from "../../db/schema/vehicles.js";
 import { ConflictError } from "../../shared/errors/conflict-error.js";
@@ -70,5 +76,50 @@ export class ClientsService {
       },
       vehicles
     };
+  }
+
+  async updateClient(id: number, data: UpdateClientDTO): Promise<Client & { formattedPhone: string }> {
+    const client = await this.clientsRepository.findById(id);
+
+    if (!client) {
+      throw new NotFoundError(`Cliente com ID ${id} não foi localizado.`);
+    }
+
+    let canonicalPhone: string | undefined;
+
+    if (data.phone) {
+      canonicalPhone = sanitizeAndValidatePhone(data.phone);
+
+      if (canonicalPhone !== client.phone) {
+        const phoneHolder = await this.clientsRepository.findByPhone(canonicalPhone);
+        if (phoneHolder) {
+          throw new ConflictError(`Já existe outro cliente cadastrado com o telefone ${data.phone}.`);
+        }
+      }
+    }
+
+    const updated = await this.clientsRepository.update(id, {
+      fullName: data.fullName ? data.fullName.trim() : undefined,
+      phone: canonicalPhone
+    });
+
+    if (!updated) {
+      throw new NotFoundError(`Cliente com ID ${id} não foi localizado.`);
+    }
+
+    return {
+      ...updated,
+      formattedPhone: formatPhoneForDisplay(updated.phone)
+    };
+  }
+
+  async deleteClient(id: number): Promise<void> {
+    const client = await this.clientsRepository.findById(id);
+
+    if (!client) {
+      throw new NotFoundError(`Cliente com ID ${id} não foi localizado.`);
+    }
+
+    await this.clientsRepository.delete(id);
   }
 }

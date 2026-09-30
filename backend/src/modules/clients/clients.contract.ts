@@ -20,6 +20,11 @@ export interface CreateClientDTO {
   phone: string;
 }
 
+export interface UpdateClientDTO {
+  fullName?: string;
+  phone?: string;
+}
+
 export interface ClientWithVehicles extends Client {
   vehicles: Vehicle[];
 }
@@ -30,4 +35,6 @@ export interface ClientsRepositoryContract {
   findByPhone(phone: string): Promise<Client | null>;
   list(params: PaginationParams): Promise<PaginatedResult<Client>>;
   findWithVehicles(id: number): Promise<ClientWithVehicles | null>;
+  update(id: number, data: UpdateClientDTO): Promise<Client | null>;
+  delete(id: number): Promise<boolean>;
 }
