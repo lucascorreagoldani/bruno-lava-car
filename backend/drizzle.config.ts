@@ -6,7 +6,7 @@ export default defineConfig({
   schema: "./src/db/schema/index.ts",
   dialect: "postgresql",
   dbCredentials: {
-    url: process.env.DATABASE_URL || "postgresql://lavacar_admin:lavacar_dev_password@localhost:5432/bruno_lava_car?schema=public"
+    url: process.env.DATABASE_URL
   },
   verbose: true,
   strict: true

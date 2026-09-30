@@ -1,13 +1,7 @@
-import { pgTable, varchar, integer, timestamp, pgEnum, index } from "drizzle-orm/pg-core";
+import { pgTable, varchar, integer, timestamp, index } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { clients } from "./clients.js";
-
-export const vehicleCategoryEnum = pgEnum("vehicle_category", [
-  "HATCH",
-  "SEDAN",
-  "SUV",
-  "PICKUP"
-]);
+import { vehicleCategoryEnum } from "./enums/index.js";
 
 export const vehicles = pgTable("vehicles", {
   plate: varchar("plate", { length: 10 }).primaryKey(),
@@ -35,4 +29,4 @@ export const vehiclesRelations = relations(vehicles, ({ one }) => ({
 
 export type Vehicle = typeof vehicles.$inferSelect;
 export type NewVehicle = typeof vehicles.$inferInsert;
-export type VehicleCategory = (typeof vehicleCategoryEnum.enumValues)[number];
+export { VehicleCategory, vehicleCategoryEnum } from "./enums/index.js";

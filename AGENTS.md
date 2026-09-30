@@ -9,6 +9,10 @@ Este arquivo define as regras universais e inegociáveis aplicadas a todos os ag
 - **Proibido Placeholders**: Nunca omita código utilizando comentários ou marcadores como `// ... resto do código ...`, `/* manter lógica anterior */` ou similares.
 - **Sem Comentários com Duas Barras**: Não inclua comentários iniciados por `//` no corpo do código de produção. O código deve ser autoexplicativo através de nomenclatura semântica clara e types estritos.
 - **Verificação de Tipos**: Todo código TypeScript gerado deve ser compatível com checagem estrita (`tsc --noEmit`).
+- **Sem Commits Automáticos**: Não realize commits ou pushes automáticos via git. O assistente só deve realizar commits quando expressamente solicitado pelo usuário.
+- **Versões Mais Recentes**: Utilizar sempre tudo na melhor versão e na mais recente e moderna, quando possível.
+- **Zero Fallback Hardcoded**: Não utilize valores ou chaves de fallback hardcoded no código (ex.: proibir `process.env.DATABASE_URL || "..."`). Utilize sempre e exclusivamente as variáveis injetadas da `.env`, validando sua obrigatoriedade via Zod ou verificação estrita.
+- **Padrão de Mensagens de Erro e Validação**: Não utilize o prefixo "ex:" em mensagens de erro ou logs (ex.: "Formato de placa inválido. Deve ser no padrão Mercosul (BRA2E19) ou Tradicional (ABC1234).").
 
 ---
 

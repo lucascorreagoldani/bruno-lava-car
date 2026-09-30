@@ -7,6 +7,11 @@ const { Pool } = pg;
 
 const databaseUrl = process.env.DATABASE_URL;
 
+if (!databaseUrl) {
+  process.stderr.write("Variável de ambiente DATABASE_URL não foi definida.\n");
+  process.exit(1);
+}
+
 async function runMigrations() {
   const pool = new Pool({
     connectionString: databaseUrl,

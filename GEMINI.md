@@ -10,10 +10,16 @@ Este arquivo define as regras e o ecossistema de agentes para o projeto **Bruno 
    - Proibido o uso de marcadores como `... resto do código ...`.
    - Evite comentários de linha dupla `//` no corpo do código; priorize código limpo e autoexplicativo com tipagem rigorosa.
 
-2. **Padrão Git**:
+2. **Diretrizes Específicas do Projeto**:
+   - **Sem Commits Automáticos**: Não realize commits ou pushes automáticos via git. O assistente não deve commitar sem aprovação expressa do usuário.
+   - **Versões Mais Recentes**: Sempre utilizar tudo na melhor versão e na mais recente possível.
+   - **Zero Chaves de Fallback Hardcoded**: Nunca colocar fallbacks literais (ex.: proibir `process.env.DATABASE_URL || "..."`). Obtenha sempre exclusivamente do `.env` com validação de obrigatoriedade.
+   - **Padrão de Logs e Mensagens**: Mensagens de erro e validações diretas e padronizadas, sem o uso de `ex:` (ex.: "Formato de placa inválido. Deve ser no padrão Mercosul (BRA2E19) ou Tradicional (ABC1234).").
+
+3. **Padrão Git**:
    - Mensagens de commit estritamente no padrão Conventional Commits (`feat:`, `fix:`, `refactor:`, `chore:`, `test:`).
 
-3. **Validação**:
+4. **Validação**:
    - Validar compatibilidade estrita com TypeScript (`tsc --noEmit`).
 
 ---

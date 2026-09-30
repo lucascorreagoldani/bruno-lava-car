@@ -1,7 +1,8 @@
 import { z } from "zod";
 
 const TRADITIONAL_PLATE_REGEX = /^[A-Z]{3}[0-9]{4}$/;
-const MERCOSUL_PLATE_REGEX = /^[A-Z]{3}[0-9][A-Z][0-9]{2}$/;
+const MERCOSUL_CAR_REGEX = /^[A-Z]{3}[0-9][A-Z][0-9]{2}$/;
+const MERCOSUL_MOTO_REGEX = /^[A-Z]{3}[0-9]{2}[A-Z][0-9]$/;
 
 export function sanitizeAndValidatePlate(rawPlate: string): string {
   const cleanPlate = rawPlate.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
@@ -11,10 +12,11 @@ export function sanitizeAndValidatePlate(rawPlate: string): string {
   }
 
   const isTraditional = TRADITIONAL_PLATE_REGEX.test(cleanPlate);
-  const isMercosul = MERCOSUL_PLATE_REGEX.test(cleanPlate);
+  const isMercosulCar = MERCOSUL_CAR_REGEX.test(cleanPlate);
+  const isMercosulMoto = MERCOSUL_MOTO_REGEX.test(cleanPlate);
 
-  if (!isTraditional && !isMercosul) {
-    throw new Error("Formato de placa inválido. Deve ser no padrão Mercosul (ex: BRA2E19) ou Tradicional (ex: ABC1234).");
+  if (!isTraditional && !isMercosulCar && !isMercosulMoto) {
+    throw new Error("Formato de placa inválido. Deve ser no padrão Mercosul (BRA2E19) ou Tradicional (ABC1234).");
   }
 
   return cleanPlate;
