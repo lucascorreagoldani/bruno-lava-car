@@ -21,7 +21,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_SSH_PORT || 22 }}
-          source: "docker-compose.yml,backend/src/db/migrations"
+          source: "docker-compose.yml,backend"
           target: "/opt/bruno-lava-car/"
 
       - name: Deploy and Restart Containers on VPS
@@ -35,17 +35,20 @@ jobs:
             set -e
             cd /opt/bruno-lava-car
 
+            echo "--> Liberando porta 3333 no Firewall UFW para a API..."
+            ufw allow 3333/tcp comment 'Bruno Lava Car API' 2>/dev/null || true
+
             echo "--> Gravando .env seguro de produção a partir do GitHub Secrets..."
             cat << 'EOF' > .env
             ${{ secrets.ENV_PRODUCTION }}
             EOF
             chmod 600 .env
 
-            echo "--> Baixando imagens mais recentes..."
-            docker compose pull
+            echo "--> Baixando imagens base atualizadas..."
+            docker compose pull postgres redis redisinsight
 
-            echo "--> Subindo contêineres..."
-            docker compose up -d --remove-orphans
+            echo "--> Construindo e iniciando todos os contêineres..."
+            docker compose up -d --build --remove-orphans
 
             echo "--> Aguardando PostgreSQL inicializar..."
             until docker exec bruno-lava-car-postgres pg_isready -U lavacar_admin_prod -d bruno_lava_car_prod > /dev/null 2>&1; do
@@ -68,3 +71,7 @@ jobs:
 
             echo "--> Status dos contêineres ativos:"
             docker compose ps
+
+            echo "--> Testando endpoint de healthcheck da API:"
+            sleep 3
+            curl -s http://localhost:3333/health || true

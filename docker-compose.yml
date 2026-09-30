@@ -45,6 +45,28 @@ services:
     networks:
       - lava_car_network
 
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: bruno-lava-car-api
+    restart: unless-stopped
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: ${PORT:-3333}
+      API_BASE_URL: ${API_BASE_URL}
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+    ports:
+      - "${PORT:-3333}:3333"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - lava_car_network
+
 volumes:
   postgres_data:
     driver: local

@@ -3,17 +3,20 @@
   "version": "1.0.0",
   "private": true,
   "description": "API Backend para o sistema Bruno Lava Car",
-  "main": "dist/index.js",
+  "main": "dist/server.js",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "tsx watch src/server.ts",
     "build": "tsc",
-    "start": "node dist/index.js",
+    "start": "node dist/server.js",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/db/migrate.ts",
     "db:studio": "drizzle-kit studio",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@fastify/cors": "^10.0.2",
+    "@fastify/swagger": "^9.4.2",
+    "@fastify/swagger-ui": "^5.2.2",
     "dotenv": "^16.4.7",
     "drizzle-orm": "^0.38.4",
     "fastify": "^5.2.1",
