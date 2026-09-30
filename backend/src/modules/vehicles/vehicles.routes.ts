@@ -54,6 +54,81 @@ export async function vehiclesRoutes(app: FastifyInstance) {
     }
   );
 
+  app.get(
+    "/vehicles",
+    {
+      schema: {
+        tags: ["Veículos"],
+        summary: "Listar veículos",
+        description: "Lista veículos cadastrados.",
+        querystring: {
+          type: "object",
+          properties: {
+            page: { type: "number", default: 1 },
+            limit: { type: "number", default: 10 },
+            search: { type: "string" },
+            brand: { type: "string" },
+            category: { type: "string", enum: ["HATCH", "SEDAN", "SUV", "PICKUP"] },
+            clientId: { type: "number" }
+          }
+        },
+        response: {
+          200: {
+            type: "object",
+            properties: {
+              statusCode: { type: "number" },
+              message: { type: "string" },
+              data: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    vehicle: {
+                      type: "object",
+                      properties: {
+                        plate: { type: "string" },
+                        formattedPlate: { type: "string" },
+                        clientId: { type: "number" },
+                        brand: { type: "string" },
+                        model: { type: "string" },
+                        color: { type: "string" },
+                        year: { type: "number" },
+                        category: { type: "string" },
+                        createdAt: { type: "string" },
+                        updatedAt: { type: "string" }
+                      }
+                    },
+                    client: {
+                      type: "object",
+                      properties: {
+                        id: { type: "number" },
+                        fullName: { type: "string" },
+                        phone: { type: "string" },
+                        formattedPhone: { type: "string" },
+                        createdAt: { type: "string" },
+                        updatedAt: { type: "string" }
+                      }
+                    }
+                  }
+                }
+              },
+              pagination: {
+                type: "object",
+                properties: {
+                  page: { type: "number" },
+                  limit: { type: "number" },
+                  total: { type: "number" },
+                  totalPages: { type: "number" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    (request, reply) => vehiclesController.list(request, reply)
+  );
+
   app.post(
     "/vehicles",
     {
@@ -116,9 +191,131 @@ export async function vehiclesRoutes(app: FastifyInstance) {
           properties: {
             plate: { type: "string", example: "BRA2E19" }
           }
+        },
+        response: {
+          200: {
+            type: "object",
+            properties: {
+              statusCode: { type: "number" },
+              message: { type: "string" },
+              data: {
+                type: "object",
+                properties: {
+                  vehicle: {
+                    type: "object",
+                    properties: {
+                      plate: { type: "string" },
+                      formattedPlate: { type: "string" },
+                      clientId: { type: "number" },
+                      brand: { type: "string" },
+                      model: { type: "string" },
+                      color: { type: "string" },
+                      year: { type: "number" },
+                      category: { type: "string" },
+                      createdAt: { type: "string" },
+                      updatedAt: { type: "string" }
+                    }
+                  },
+                  client: {
+                    type: "object",
+                    properties: {
+                      id: { type: "number" },
+                      fullName: { type: "string" },
+                      phone: { type: "string" },
+                      formattedPhone: { type: "string" },
+                      createdAt: { type: "string" },
+                      updatedAt: { type: "string" }
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
       }
     },
     (request, reply) => vehiclesController.getByPlate(request, reply)
+  );
+
+  app.put(
+    "/vehicles/:plate",
+    {
+      schema: {
+        tags: ["Veículos"],
+        summary: "Atualizar veículo",
+        description: "Atualiza informações do veículo.",
+        params: {
+          type: "object",
+          required: ["plate"],
+          properties: {
+            plate: { type: "string", example: "BRA2E19" }
+          }
+        },
+        body: {
+          type: "object",
+          properties: {
+            clientId: { type: "number", example: 1 },
+            brand: { type: "string", enum: [...KNOWN_VEHICLE_BRANDS], example: "Honda" },
+            model: { type: "string", example: "Civic G10" },
+            color: { type: "string", enum: [...KNOWN_VEHICLE_COLORS], example: "Branco" },
+            year: { type: "number", example: 2022 },
+            category: { type: "string", enum: ["HATCH", "SEDAN", "SUV", "PICKUP"], example: "SEDAN" }
+          }
+        },
+        response: {
+          200: {
+            type: "object",
+            properties: {
+              statusCode: { type: "number" },
+              message: { type: "string" },
+              data: {
+                type: "object",
+                properties: {
+                  plate: { type: "string" },
+                  formattedPlate: { type: "string" },
+                  clientId: { type: "number" },
+                  brand: { type: "string" },
+                  model: { type: "string" },
+                  color: { type: "string" },
+                  year: { type: "number" },
+                  category: { type: "string" },
+                  createdAt: { type: "string" },
+                  updatedAt: { type: "string" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    (request, reply) => vehiclesController.update(request, reply)
+  );
+
+  app.delete(
+    "/vehicles/:plate",
+    {
+      schema: {
+        tags: ["Veículos"],
+        summary: "Remover veículo",
+        description: "Remove o veículo do sistema.",
+        params: {
+          type: "object",
+          required: ["plate"],
+          properties: {
+            plate: { type: "string", example: "BRA2E19" }
+          }
+        },
+        response: {
+          200: {
+            type: "object",
+            properties: {
+              statusCode: { type: "number" },
+              message: { type: "string" }
+            }
+          }
+        }
+      }
+    },
+    (request, reply) => vehiclesController.delete(request, reply)
   );
 }
