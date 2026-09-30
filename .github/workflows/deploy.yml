@@ -14,14 +14,14 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Copy docker-compose.yml to VPS
+      - name: Copy project files to VPS
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_SSH_PORT || 22 }}
-          source: "docker-compose.yml"
+          source: "docker-compose.yml,backend/src/db/migrations"
           target: "/opt/bruno-lava-car/"
 
       - name: Deploy and Restart Containers on VPS
@@ -46,6 +46,22 @@ jobs:
 
             echo "--> Subindo contêineres..."
             docker compose up -d --remove-orphans
+
+            echo "--> Aguardando PostgreSQL inicializar..."
+            until docker exec bruno-lava-car-postgres pg_isready -U lavacar_admin_prod -d bruno_lava_car_prod > /dev/null 2>&1; do
+              sleep 1
+            done
+
+            echo "--> Aplicando migrations no PostgreSQL..."
+            for sql_file in backend/src/db/migrations/*.sql; do
+              if [ -f "$sql_file" ]; then
+                echo "Executando: $sql_file"
+                docker exec -i bruno-lava-car-postgres psql -U lavacar_admin_prod -d bruno_lava_car_prod < "$sql_file"
+              fi
+            done
+
+            echo "--> Tabelas ativas no banco de dados:"
+            docker exec -i bruno-lava-car-postgres psql -U lavacar_admin_prod -d bruno_lava_car_prod -c "\dt"
 
             echo "--> Limpando imagens órfãs para economizar disco NVMe..."
             docker image prune -f
