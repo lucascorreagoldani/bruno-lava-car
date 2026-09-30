@@ -8,6 +8,11 @@ import { vehiclesRoutes } from "./modules/vehicles/vehicles.routes.js";
 
 export function buildApp(): FastifyInstance {
   const app = fastify({
+    ajv: {
+      customOptions: {
+        strict: false
+      }
+    },
     logger: {
       level: process.env.NODE_ENV === "production" ? "info" : "debug",
       transport:
@@ -39,7 +44,7 @@ export function buildApp(): FastifyInstance {
       },
       servers: [
         {
-          url: "http://localhost:3333",
+          url: "/",
           description: "Servidor Principal"
         }
       ],
