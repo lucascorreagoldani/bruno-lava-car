@@ -5,6 +5,7 @@ import swaggerUi from "@fastify/swagger-ui";
 import { globalErrorHandler } from "./shared/http/error-handler.js";
 import { clientsRoutes } from "./modules/clients/clients.routes.js";
 import { vehiclesRoutes } from "./modules/vehicles/vehicles.routes.js";
+import { servicesRoutes } from "./modules/services/services.routes.js";
 
 export function buildApp(): FastifyInstance {
   const app = fastify({
@@ -50,7 +51,8 @@ export function buildApp(): FastifyInstance {
       ],
       tags: [
         { name: "Clientes", description: "Operações relacionadas a clientes" },
-        { name: "Veículos", description: "Operações relacionadas a veículos e vinculação de clientes" }
+        { name: "Veículos", description: "Operações relacionadas a veículos e vinculação de clientes" },
+        { name: "Serviços", description: "Catálogo de serviços e precificação por categoria de veículo" }
       ]
     }
   });
@@ -86,6 +88,7 @@ export function buildApp(): FastifyInstance {
 
   app.register(clientsRoutes);
   app.register(vehiclesRoutes);
+  app.register(servicesRoutes);
 
   return app;
 }

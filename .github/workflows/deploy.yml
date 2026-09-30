@@ -35,7 +35,10 @@ jobs:
             set -e
             cd /opt/bruno-lava-car
 
-            echo "--> Liberando porta 3333 no Firewall UFW para a API..."
+            echo "--> Liberando portas no Firewall UFW..."
+            ufw allow 80/tcp comment 'HTTP' 2>/dev/null || true
+            ufw allow 443/tcp comment 'HTTPS' 2>/dev/null || true
+            ufw allow 81/tcp comment 'Nginx Proxy Manager Dashboard' 2>/dev/null || true
             ufw allow 3333/tcp comment 'Bruno Lava Car API' 2>/dev/null || true
 
             echo "--> Gravando .env seguro de produção a partir do GitHub Secrets..."
@@ -45,7 +48,7 @@ jobs:
             chmod 600 .env
 
             echo "--> Baixando imagens base atualizadas..."
-            docker compose pull postgres redis redisinsight
+            docker compose pull postgres redis redisinsight npm
 
             echo "--> Construindo e iniciando todos os contêineres..."
             docker compose up -d --build --remove-orphans
