@@ -1,0 +1,35 @@
+# Logs e runtime
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Variáveis de ambiente e segredos locais (NUNCA COMMITAR)
+.env
+.env.*
+!.env.example
+
+# Build e compilação
+dist/
+build/
+.turbo/
+.next/
+out/
+
+# Dados persistentes locais do Docker
+data/
+postgres_data/
+redis_data/
+minio_data/
+
+# IDE e Sistema Operacional
+.DS_Store
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

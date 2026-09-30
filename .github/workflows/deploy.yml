@@ -1,0 +1,54 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy Docker Services to VPS
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Copy docker-compose.yml to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_SSH_PORT || 22 }}
+          source: "docker-compose.yml"
+          target: "/opt/bruno-lava-car/"
+
+      - name: Deploy and Restart Containers on VPS
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_SSH_PORT || 22 }}
+          script: |
+            set -e
+            cd /opt/bruno-lava-car
+
+            echo "--> Gravando .env seguro de produção a partir do GitHub Secrets..."
+            cat << 'EOF' > .env
+            ${{ secrets.ENV_PRODUCTION }}
+            EOF
+            chmod 600 .env
+
+            echo "--> Baixando imagens mais recentes..."
+            docker compose pull
+
+            echo "--> Subindo contêineres..."
+            docker compose up -d --remove-orphans
+
+            echo "--> Limpando imagens órfãs para economizar disco NVMe..."
+            docker image prune -f
+
+            echo "--> Status dos contêineres ativos:"
+            docker compose ps
