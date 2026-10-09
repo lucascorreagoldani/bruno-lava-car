@@ -37,11 +37,23 @@ export function buildApp(): FastifyInstance {
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
   });
 
+  app.addHook("preHandler", async (request, reply) => {
+    const rawUrl = request.raw.url || "";
+    const [pathname = "", search] = rawUrl.split("?");
+    const legacyPrefixes = ["/clients", "/vehicles", "/services", "/boxes"];
+    const isLegacy = legacyPrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
+
+    if (isLegacy && !pathname.startsWith("/v1")) {
+      const target = `/v1${pathname}${search ? `?${search}` : ""}`;
+      return reply.redirect(target, 308);
+    }
+  });
+
   app.register(swagger, {
     openapi: {
       info: {
         title: "Bruno Lava Car",
-        description: "API de gestão de clientes, veículos e agendamentos.",
+        description: "API de gestão de clientes, veículos, serviços e boxes.",
         version: "1.0.0"
       },
       servers: [
@@ -88,10 +100,10 @@ export function buildApp(): FastifyInstance {
     };
   });
 
-  app.register(clientsRoutes);
-  app.register(vehiclesRoutes);
-  app.register(servicesRoutes);
-  app.register(boxesRoutes);
+  app.register(clientsRoutes, { prefix: "/v1" });
+  app.register(vehiclesRoutes, { prefix: "/v1" });
+  app.register(servicesRoutes, { prefix: "/v1" });
+  app.register(boxesRoutes, { prefix: "/v1" });
 
   return app;
 }
