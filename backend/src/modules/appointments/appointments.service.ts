@@ -16,6 +16,7 @@ import { DistributedLock, distributedLock } from "../../shared/redis/distributed
 import { NotFoundError } from "../../shared/errors/not-found-error.js";
 import { ConflictError } from "../../shared/errors/conflict-error.js";
 import { VehicleCategory } from "../../db/schema/enums/vehicle-category.js";
+import { NotificationsServiceContract } from "../notifications/notifications.contract.js";
 
 export class AppointmentsService {
   constructor(
@@ -24,7 +25,8 @@ export class AppointmentsService {
     private readonly vehiclesRepository: VehiclesRepositoryContract,
     private readonly servicesRepository: ServicesRepositoryContract,
     private readonly boxesRepository: BoxesRepositoryContract,
-    private readonly lock: DistributedLock = distributedLock
+    private readonly lock: DistributedLock = distributedLock,
+    private readonly notificationsService?: NotificationsServiceContract
   ) { }
 
   async createAppointment(input: CreateAppointmentInputDTO): Promise<AppointmentWithRelations> {
@@ -95,7 +97,7 @@ export class AppointmentsService {
         );
       }
 
-      return this.appointmentsRepository.create({
+      const created = await this.appointmentsRepository.create({
         clientId: input.clientId,
         vehiclePlate: input.vehiclePlate.toUpperCase(),
         serviceId: input.serviceId,
@@ -105,6 +107,37 @@ export class AppointmentsService {
         priceInCents: priceRecord.priceInCents,
         notes: input.notes ? input.notes.trim() : undefined
       });
+
+      if (this.notificationsService && created.client?.phone) {
+        const dateFormatted = new Intl.DateTimeFormat("pt-BR", {
+          dateStyle: "short",
+          timeZone: "America/Sao_Paulo"
+        }).format(scheduledAt);
+        const timeFormatted = new Intl.DateTimeFormat("pt-BR", {
+          timeStyle: "short",
+          timeZone: "America/Sao_Paulo"
+        }).format(scheduledAt);
+        const model = created.vehicle?.model ? `${created.vehicle.brand} ${created.vehicle.model}` : "Veículo";
+        const boxName = created.box?.name || "Box";
+        const content = `Olá, ${created.client.fullName}! 🚗✨\nSeu agendamento no Bruno Lava Car foi confirmado com sucesso!\n📅 Data: ${dateFormatted}\n⏰ Horário: ${timeFormatted}\n📍 Box: ${boxName}\n🚘 Veículo: ${model} (${created.vehiclePlate})\n\nEstamos preparando tudo para receber seu carro!`;
+
+        await this.notificationsService
+          .enqueueAutomaticNotification({
+            type: "APPOINTMENT_CONFIRMED",
+            channel: "WHATSAPP",
+            recipientPhone: created.client.phone,
+            recipientName: created.client.fullName,
+            content,
+            clientId: created.clientId,
+            vehiclePlate: created.vehiclePlate,
+            appointmentId: created.id
+          })
+          .catch((err) => {
+            process.stderr.write(`Falha ao enfileirar notificação APPOINTMENT_CONFIRMED: ${err.message}\n`);
+          });
+      }
+
+      return created;
     });
   }
 

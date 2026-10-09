@@ -8,6 +8,8 @@ import { DrizzleBoxesRepository } from "../boxes/boxes.repository.js";
 import { AppointmentsService } from "./appointments.service.js";
 import { AppointmentsController } from "./appointments.controller.js";
 import { distributedLock } from "../../shared/redis/distributed-lock.js";
+import { NotificationsRepository } from "../notifications/notifications.repository.js";
+import { NotificationsService } from "../notifications/notifications.service.js";
 
 export async function appointmentsRoutes(app: FastifyInstance) {
   const appointmentsRepository = new DrizzleAppointmentsRepository(db);
@@ -15,6 +17,8 @@ export async function appointmentsRoutes(app: FastifyInstance) {
   const vehiclesRepository = new DrizzleVehiclesRepository(db);
   const servicesRepository = new DrizzleServicesRepository(db);
   const boxesRepository = new DrizzleBoxesRepository(db);
+  const notificationsRepository = new NotificationsRepository();
+  const notificationsService = new NotificationsService(notificationsRepository);
 
   const appointmentsService = new AppointmentsService(
     appointmentsRepository,
@@ -22,7 +26,8 @@ export async function appointmentsRoutes(app: FastifyInstance) {
     vehiclesRepository,
     servicesRepository,
     boxesRepository,
-    distributedLock
+    distributedLock,
+    notificationsService
   );
 
   const appointmentsController = new AppointmentsController(appointmentsService);
