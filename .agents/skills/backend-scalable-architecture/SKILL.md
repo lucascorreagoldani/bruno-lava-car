@@ -27,16 +27,19 @@ description: >-
 - **Transações Atômicas**: Operações que tocam duas ou mais tabelas relacionais dependentes devem rodar sob transações atômicas com tratamento rigoroso de rollback.
 - **Idempotência de Webhooks**: Todas as rotas que recebem webhooks (como WhatsApp e gateways de pagamento) devem validar chave de idempotência (`message_id` ou `event_id`) armazenada em cache por 24 horas antes de processar eventos duplicados.
 
-## 4. Tratamento de Erros e Respostas Padronizadas
+## 4. Tratamento de Erros e Respostas Padronizadas (RFC 7807)
 - Não utilize blocos vazios de captura de exceções.
 - Centralize o tratamento de erros em um manipulador global (`setErrorHandler` no Fastify).
-- Todas as respostas de erro devem obedecer estritamente à estrutura:
+- Siga as diretrizes completas da skill `rest-api-design`.
+- Todas as respostas de erro devem obedecer estritamente à especificação **RFC 7807 / RFC 9457 (Problem Details for HTTP APIs)** com `Content-Type: application/problem+json`:
 ```json
 {
-  "statusCode": 400,
-  "error": "BAD_REQUEST",
-  "message": "Mensagem clara e legível do erro",
-  "details": []
+  "type": "https://api.brunolavacar.com/errors/bad-request",
+  "title": "Requisição Inválida",
+  "status": 400,
+  "detail": "Mensagem clara e legível do erro ocorrido",
+  "instance": "/v1/recurso",
+  "invalidParams": []
 }
 ```
 
