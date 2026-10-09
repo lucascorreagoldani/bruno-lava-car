@@ -8,6 +8,9 @@ import { vehiclesRoutes } from "./modules/vehicles/vehicles.routes.js";
 import { servicesRoutes } from "./modules/services/services.routes.js";
 import { boxesRoutes } from "./modules/boxes/boxes.routes.js";
 import { appointmentsRoutes } from "./modules/appointments/appointments.routes.js";
+import { workOrdersRoutes } from "./modules/work-orders/work-orders.routes.js";
+import { notificationsRoutes } from "./modules/notifications/notifications.routes.js";
+import { getNotificationWorker, stopNotificationWorker } from "./shared/queue/notification-worker.js";
 
 export function buildApp(): FastifyInstance {
   const app = fastify({
@@ -41,8 +44,18 @@ export function buildApp(): FastifyInstance {
   app.addHook("preHandler", async (request, reply) => {
     const rawUrl = request.raw.url || "";
     const [pathname = "", search] = rawUrl.split("?");
-    const legacyPrefixes = ["/clients", "/vehicles", "/services", "/boxes", "/appointments"];
-    const isLegacy = legacyPrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
+    const legacyPrefixes = [
+      "/clients",
+      "/vehicles",
+      "/services",
+      "/boxes",
+      "/appointments",
+      "/work-orders",
+      "/notifications"
+    ];
+    const isLegacy = legacyPrefixes.some(
+      (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
+    );
 
     if (isLegacy && !pathname.startsWith("/v1")) {
       const target = `/v1${pathname}${search ? `?${search}` : ""}`;
@@ -54,7 +67,8 @@ export function buildApp(): FastifyInstance {
     openapi: {
       info: {
         title: "Bruno Lava Car",
-        description: "API de gestão de clientes, veículos, serviços, boxes e agendamentos.",
+        description:
+          "API de gestão de clientes, veículos, serviços, boxes, agendamentos, ordens de serviço e notificações.",
         version: "1.0.0"
       },
       servers: [
@@ -68,7 +82,9 @@ export function buildApp(): FastifyInstance {
         { name: "Veículos", description: "Operações relacionadas a veículos e vinculação de clientes" },
         { name: "Serviços", description: "Catálogo de serviços e precificação por categoria de veículo" },
         { name: "Boxes", description: "Gestão dos boxes físicos de atendimento e status operacional" },
-        { name: "Agendamentos", description: "Controle de agendamentos, concorrência de boxes e linha do tempo" }
+        { name: "Agendamentos", description: "Controle de agendamentos, concorrência de boxes e linha do tempo" },
+        { name: "Ordens de Serviço", description: "Controle de execução física, fases do atendimento e itens de serviço" },
+        { name: "Notificações & WhatsApp", description: "Disparos automáticos, mensagens no WhatsApp e auditoria de envio" }
       ]
     }
   });
@@ -107,6 +123,14 @@ export function buildApp(): FastifyInstance {
   app.register(servicesRoutes, { prefix: "/v1" });
   app.register(boxesRoutes, { prefix: "/v1" });
   app.register(appointmentsRoutes, { prefix: "/v1" });
+  app.register(workOrdersRoutes, { prefix: "/v1" });
+  app.register(notificationsRoutes, { prefix: "/v1" });
+
+  getNotificationWorker();
+
+  app.addHook("onClose", async () => {
+    await stopNotificationWorker();
+  });
 
   return app;
 }
