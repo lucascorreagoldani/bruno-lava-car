@@ -6,7 +6,11 @@ const envSchema = z.object({
   PORT: z.coerce.number().default(3333),
   API_BASE_URL: z.string().url("API_BASE_URL deve ser uma URL válida"),
   DATABASE_URL: z.string().min(1, "DATABASE_URL é obrigatória e deve ser configurada no .env"),
-  REDIS_URL: z.string().min(1, "REDIS_URL é obrigatória e deve ser configurada no .env")
+  REDIS_URL: z.string().min(1, "REDIS_URL é obrigatória e deve ser configurada no .env"),
+  WHATSAPP_DRIVER: z.enum(["mock", "webhook", "evolution"]).default("mock"),
+  WHATSAPP_API_URL: z.string().url("WHATSAPP_API_URL deve ser uma URL válida").optional(),
+  WHATSAPP_API_TOKEN: z.string().optional(),
+  PIX_KEY: z.string().min(1, "PIX_KEY é obrigatória").default("contato@brunolavacar.com.br")
 });
 
 const parsedEnv = envSchema.safeParse(process.env);
