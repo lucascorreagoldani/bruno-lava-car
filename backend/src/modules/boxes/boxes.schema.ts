@@ -46,6 +46,8 @@ export const boxIdParamSchema = z.object({
 });
 
 export const listBoxesQuerySchema = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(100).default(20),
   status: z.enum(boxStatusEnum.enumValues).optional(),
   search: z.string().optional()
 });

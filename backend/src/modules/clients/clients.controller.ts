@@ -14,11 +14,14 @@ export class ClientsController {
     const parsedBody = createClientBodySchema.parse(request.body);
     const client = await this.clientsService.createClient(parsedBody);
 
-    return reply.status(201).send({
-      statusCode: 201,
-      message: "Cliente cadastrado com sucesso",
-      data: client
-    });
+    return reply
+      .header("Location", `/v1/clients/${client.id}`)
+      .status(201)
+      .send({
+        statusCode: 201,
+        message: "Cliente cadastrado com sucesso",
+        data: client
+      });
   }
 
   async getById(request: FastifyRequest, reply: FastifyReply) {

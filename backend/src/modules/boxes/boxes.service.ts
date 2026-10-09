@@ -2,7 +2,8 @@ import {
   BoxesRepositoryContract,
   CreateBoxDTO,
   UpdateBoxDTO,
-  BoxFilterParams
+  BoxFilterParams,
+  PaginatedBoxesOutput
 } from "./boxes.contract.js";
 import { Box, BoxStatus } from "../../db/schema/boxes.js";
 import { ConflictError } from "../../shared/errors/conflict-error.js";
@@ -36,7 +37,7 @@ export class BoxesService {
     return box;
   }
 
-  async listBoxes(params: BoxFilterParams): Promise<Box[]> {
+  async listBoxes(params: BoxFilterParams): Promise<PaginatedBoxesOutput> {
     return this.boxesRepository.list(params);
   }
 

@@ -15,11 +15,14 @@ export class ServicesController {
     const parsedBody = createServiceBodySchema.parse(request.body);
     const service = await this.servicesService.createService(parsedBody);
 
-    return reply.status(201).send({
-      statusCode: 201,
-      message: "Serviço cadastrado com sucesso",
-      data: service
-    });
+    return reply
+      .header("Location", `/v1/services/${service.id}`)
+      .status(201)
+      .send({
+        statusCode: 201,
+        message: "Serviço cadastrado com sucesso",
+        data: service
+      });
   }
 
   async getById(request: FastifyRequest, reply: FastifyReply) {
@@ -35,12 +38,18 @@ export class ServicesController {
 
   async list(request: FastifyRequest, reply: FastifyReply) {
     const query = listServicesQuerySchema.parse(request.query);
-    const services = await this.servicesService.listServices(query);
+    const result = await this.servicesService.listServices(query);
 
     return reply.status(200).send({
       statusCode: 200,
       message: "Lista de serviços recuperada com sucesso",
-      data: services
+      data: result.items,
+      pagination: {
+        page: result.page,
+        limit: result.limit,
+        total: result.total,
+        totalPages: result.totalPages
+      }
     });
   }
 

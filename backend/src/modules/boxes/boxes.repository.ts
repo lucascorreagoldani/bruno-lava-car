@@ -1,4 +1,4 @@
-import { eq, and, ilike, asc } from "drizzle-orm";
+import { eq, and, ilike, asc, count } from "drizzle-orm";
 import { NodePgDatabase } from "drizzle-orm/node-postgres";
 import * as schema from "../../db/schema/index.js";
 import { boxes, Box } from "../../db/schema/boxes.js";
@@ -6,7 +6,8 @@ import {
   BoxesRepositoryContract,
   CreateBoxDTO,
   UpdateBoxDTO,
-  BoxFilterParams
+  BoxFilterParams,
+  PaginatedBoxesOutput
 } from "./boxes.contract.js";
 
 export class DrizzleBoxesRepository implements BoxesRepositoryContract {
@@ -49,7 +50,11 @@ export class DrizzleBoxesRepository implements BoxesRepositoryContract {
     return box || null;
   }
 
-  async list(params: BoxFilterParams): Promise<Box[]> {
+  async list(params: BoxFilterParams): Promise<PaginatedBoxesOutput> {
+    const page = params.page || 1;
+    const limit = Math.min(params.limit || 20, 100);
+    const offset = (page - 1) * limit;
+
     const conditions = [];
 
     if (params.status) {
@@ -62,11 +67,28 @@ export class DrizzleBoxesRepository implements BoxesRepositoryContract {
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
-    return this.database
+    const [countResult] = await this.database
+      .select({ total: count() })
+      .from(boxes)
+      .where(whereClause);
+
+    const total = Number(countResult?.total || 0);
+
+    const items = await this.database
       .select()
       .from(boxes)
       .where(whereClause)
-      .orderBy(asc(boxes.id));
+      .orderBy(asc(boxes.id))
+      .limit(limit)
+      .offset(offset);
+
+    return {
+      items,
+      total,
+      page,
+      limit,
+      totalPages: total === 0 ? 0 : Math.ceil(total / limit)
+    };
   }
 
   async update(id: number, data: UpdateBoxDTO): Promise<Box | null> {

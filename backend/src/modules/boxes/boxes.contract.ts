@@ -13,15 +13,25 @@ export interface UpdateBoxDTO {
 }
 
 export interface BoxFilterParams {
+  page?: number;
+  limit?: number;
   status?: BoxStatus;
   search?: string;
+}
+
+export interface PaginatedBoxesOutput {
+  items: Box[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
 }
 
 export interface BoxesRepositoryContract {
   create(data: CreateBoxDTO): Promise<Box>;
   findById(id: number): Promise<Box | null>;
   findByName(name: string): Promise<Box | null>;
-  list(params: BoxFilterParams): Promise<Box[]>;
+  list(params: BoxFilterParams): Promise<PaginatedBoxesOutput>;
   update(id: number, data: UpdateBoxDTO): Promise<Box | null>;
   delete(id: number): Promise<boolean>;
 }

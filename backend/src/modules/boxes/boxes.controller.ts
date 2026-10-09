@@ -15,11 +15,14 @@ export class BoxesController {
     const parsedBody = createBoxBodySchema.parse(request.body);
     const box = await this.boxesService.createBox(parsedBody);
 
-    return reply.status(201).send({
-      statusCode: 201,
-      message: "Box cadastrado com sucesso",
-      data: box
-    });
+    return reply
+      .header("Location", `/v1/boxes/${box.id}`)
+      .status(201)
+      .send({
+        statusCode: 201,
+        message: "Box cadastrado com sucesso",
+        data: box
+      });
   }
 
   async getById(request: FastifyRequest, reply: FastifyReply) {
@@ -35,12 +38,18 @@ export class BoxesController {
 
   async list(request: FastifyRequest, reply: FastifyReply) {
     const query = listBoxesQuerySchema.parse(request.query);
-    const boxes = await this.boxesService.listBoxes(query);
+    const result = await this.boxesService.listBoxes(query);
 
     return reply.status(200).send({
       statusCode: 200,
       message: "Lista de boxes recuperada com sucesso",
-      data: boxes
+      data: result.items,
+      pagination: {
+        page: result.page,
+        limit: result.limit,
+        total: result.total,
+        totalPages: result.totalPages
+      }
     });
   }
 

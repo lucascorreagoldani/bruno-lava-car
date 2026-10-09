@@ -78,10 +78,22 @@ export class ServicesService {
     return this.formatServiceOutput(service);
   }
 
-  async listServices(params: ServiceFilterParams): Promise<FormattedServiceWithPrices[]> {
-    const services = await this.servicesRepository.list(params);
+  async listServices(params: ServiceFilterParams): Promise<{
+    items: FormattedServiceWithPrices[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
+    const result = await this.servicesRepository.list(params);
 
-    return services.map((service) => this.formatServiceOutput(service));
+    return {
+      items: result.items.map((service) => this.formatServiceOutput(service)),
+      total: result.total,
+      page: result.page,
+      limit: result.limit,
+      totalPages: result.totalPages
+    };
   }
 
   async updateService(id: number, data: UpdateServiceDTO): Promise<FormattedServiceWithPrices> {

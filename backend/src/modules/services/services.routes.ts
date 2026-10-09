@@ -94,6 +94,8 @@ export async function servicesRoutes(app: FastifyInstance) {
         querystring: {
           type: "object",
           properties: {
+            page: { type: "number", default: 1, minimum: 1 },
+            limit: { type: "number", default: 20, minimum: 1, maximum: 100 },
             active: { type: "boolean" },
             search: { type: "string" }
           }
@@ -130,6 +132,15 @@ export async function servicesRoutes(app: FastifyInstance) {
                     createdAt: { type: "string" },
                     updatedAt: { type: "string" }
                   }
+                }
+              },
+              pagination: {
+                type: "object",
+                properties: {
+                  page: { type: "number" },
+                  limit: { type: "number" },
+                  total: { type: "number" },
+                  totalPages: { type: "number" }
                 }
               }
             }

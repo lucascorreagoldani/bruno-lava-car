@@ -1,4 +1,4 @@
-import { eq, and, ilike, desc } from "drizzle-orm";
+import { eq, and, ilike, desc, count } from "drizzle-orm";
 import { NodePgDatabase } from "drizzle-orm/node-postgres";
 import * as schema from "../../db/schema/index.js";
 import { services, Service } from "../../db/schema/services.js";
@@ -9,7 +9,8 @@ import {
   ServiceWithPrices,
   CreateServiceDTO,
   UpdateServiceDTO,
-  ServiceFilterParams
+  ServiceFilterParams,
+  PaginatedServicesOutput
 } from "./services.contract.js";
 
 export class DrizzleServicesRepository implements ServicesRepositoryContract {
@@ -70,7 +71,11 @@ export class DrizzleServicesRepository implements ServicesRepositoryContract {
     return result || null;
   }
 
-  async list(params: ServiceFilterParams): Promise<ServiceWithPrices[]> {
+  async list(params: ServiceFilterParams): Promise<PaginatedServicesOutput> {
+    const page = params.page || 1;
+    const limit = Math.min(params.limit || 20, 100);
+    const offset = (page - 1) * limit;
+
     const conditions = [];
 
     if (params.active !== undefined) {
@@ -83,13 +88,30 @@ export class DrizzleServicesRepository implements ServicesRepositoryContract {
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
-    return this.database.query.services.findMany({
+    const [countResult] = await this.database
+      .select({ total: count() })
+      .from(services)
+      .where(whereClause);
+
+    const total = Number(countResult?.total || 0);
+
+    const items = await this.database.query.services.findMany({
       where: whereClause,
       with: {
         prices: true
       },
-      orderBy: desc(services.createdAt)
+      orderBy: desc(services.createdAt),
+      limit,
+      offset
     });
+
+    return {
+      items,
+      total,
+      page,
+      limit,
+      totalPages: total === 0 ? 0 : Math.ceil(total / limit)
+    };
   }
 
   async update(id: number, data: UpdateServiceDTO): Promise<ServiceWithPrices | null> {

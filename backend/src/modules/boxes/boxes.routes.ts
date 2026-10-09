@@ -68,6 +68,8 @@ export async function boxesRoutes(app: FastifyInstance) {
         querystring: {
           type: "object",
           properties: {
+            page: { type: "number", default: 1, minimum: 1 },
+            limit: { type: "number", default: 20, minimum: 1, maximum: 100 },
             status: {
               type: "string",
               enum: ["ACTIVE", "MAINTENANCE", "INACTIVE"]
@@ -93,6 +95,15 @@ export async function boxesRoutes(app: FastifyInstance) {
                     createdAt: { type: "string" },
                     updatedAt: { type: "string" }
                   }
+                }
+              },
+              pagination: {
+                type: "object",
+                properties: {
+                  page: { type: "number" },
+                  limit: { type: "number" },
+                  total: { type: "number" },
+                  totalPages: { type: "number" }
                 }
               }
             }
