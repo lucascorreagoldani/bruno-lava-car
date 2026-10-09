@@ -7,6 +7,7 @@ import { clientsRoutes } from "./modules/clients/clients.routes.js";
 import { vehiclesRoutes } from "./modules/vehicles/vehicles.routes.js";
 import { servicesRoutes } from "./modules/services/services.routes.js";
 import { boxesRoutes } from "./modules/boxes/boxes.routes.js";
+import { appointmentsRoutes } from "./modules/appointments/appointments.routes.js";
 
 export function buildApp(): FastifyInstance {
   const app = fastify({
@@ -40,7 +41,7 @@ export function buildApp(): FastifyInstance {
   app.addHook("preHandler", async (request, reply) => {
     const rawUrl = request.raw.url || "";
     const [pathname = "", search] = rawUrl.split("?");
-    const legacyPrefixes = ["/clients", "/vehicles", "/services", "/boxes"];
+    const legacyPrefixes = ["/clients", "/vehicles", "/services", "/boxes", "/appointments"];
     const isLegacy = legacyPrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
 
     if (isLegacy && !pathname.startsWith("/v1")) {
@@ -53,7 +54,7 @@ export function buildApp(): FastifyInstance {
     openapi: {
       info: {
         title: "Bruno Lava Car",
-        description: "API de gestão de clientes, veículos, serviços e boxes.",
+        description: "API de gestão de clientes, veículos, serviços, boxes e agendamentos.",
         version: "1.0.0"
       },
       servers: [
@@ -66,7 +67,8 @@ export function buildApp(): FastifyInstance {
         { name: "Clientes", description: "Operações relacionadas a clientes" },
         { name: "Veículos", description: "Operações relacionadas a veículos e vinculação de clientes" },
         { name: "Serviços", description: "Catálogo de serviços e precificação por categoria de veículo" },
-        { name: "Boxes", description: "Gestão dos boxes físicos de atendimento e status operacional" }
+        { name: "Boxes", description: "Gestão dos boxes físicos de atendimento e status operacional" },
+        { name: "Agendamentos", description: "Controle de agendamentos, concorrência de boxes e linha do tempo" }
       ]
     }
   });
@@ -104,6 +106,7 @@ export function buildApp(): FastifyInstance {
   app.register(vehiclesRoutes, { prefix: "/v1" });
   app.register(servicesRoutes, { prefix: "/v1" });
   app.register(boxesRoutes, { prefix: "/v1" });
+  app.register(appointmentsRoutes, { prefix: "/v1" });
 
   return app;
 }
