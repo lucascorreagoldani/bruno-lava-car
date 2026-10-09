@@ -15,6 +15,13 @@
       "when": 1790799506683,
       "tag": "0001_create_services_and_prices",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791550000000,
+      "tag": "0002_create_boxes",
+      "breakpoints": true
     }
   ]
 }
