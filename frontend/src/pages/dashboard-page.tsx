@@ -1,7 +1,13 @@
-import { useMemo } from "react";
-import { PlusCircle, RefreshCw, MessageSquareCheck } from "lucide-react";
+import { useMemo, useState } from "react";
+import {
+  PlusCircle,
+  RefreshCw,
+  MessageSquareCheck,
+  ServerOff
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { KpiMetricsGrid } from "@/components/modules/dashboard/kpi-metrics-grid";
 import { LiveBoxesMonitor } from "@/components/modules/dashboard/live-boxes-monitor";
 import { WorkOrdersPipeline } from "@/components/modules/dashboard/work-orders-pipeline";
@@ -13,6 +19,7 @@ import {
   useWorkOrdersQuery,
   useUpdateWorkOrderStatusMutation
 } from "@/services/queries/use-work-orders";
+import { DEMO_BOXES, DEMO_WORK_ORDERS } from "@/services/demo-data";
 import type {
   DashboardMetricSummary,
   WorkOrder,
@@ -37,8 +44,22 @@ export function DashboardPage() {
 
   const updateStatusMutation = useUpdateWorkOrderStatusMutation();
 
-  const boxes = useMemo(() => boxesData?.data || [], [boxesData]);
-  const orders = useMemo(() => workOrdersData?.data || [], [workOrdersData]);
+  const isBackendOffline = isErrorBoxes || isErrorOrders;
+  const [demoOrders, setDemoOrders] = useState<WorkOrder[]>(DEMO_WORK_ORDERS);
+
+  const boxes = useMemo(() => {
+    if (isBackendOffline) {
+      return DEMO_BOXES;
+    }
+    return boxesData?.data || [];
+  }, [boxesData, isBackendOffline]);
+
+  const orders = useMemo(() => {
+    if (isBackendOffline) {
+      return demoOrders;
+    }
+    return workOrdersData?.data || [];
+  }, [workOrdersData, demoOrders, isBackendOffline]);
 
   const activeOrders = useMemo(
     () =>
@@ -130,6 +151,25 @@ export function DashboardPage() {
   }, [orders]);
 
   function handleAdvanceStatus(order: WorkOrder, nextStatus: WorkOrderStatus) {
+    if (isBackendOffline) {
+      setDemoOrders((prev) =>
+        prev.map((o) => (o.id === order.id ? { ...o, status: nextStatus } : o))
+      );
+      if (nextStatus === "READY_FOR_PICKUP") {
+        toast.success(
+          `OS #${order.id} marcada como Pronta! Notificação simulada via WhatsApp para ${order.client?.name}.`,
+          {
+            icon: <MessageSquareCheck className="h-4 w-4 text-emerald-400" />
+          }
+        );
+      } else {
+        toast.success(
+          `Status da OS #${order.id} avançado para ${nextStatus} (Modo Preview).`
+        );
+      }
+      return;
+    }
+
     updateStatusMutation.mutate(
       {
         workOrderId: order.id,
@@ -162,18 +202,64 @@ export function DashboardPage() {
   function handleRefreshAll() {
     refetchBoxes();
     refetchOrders();
-    toast.info("Painel operacional sincronizado com o servidor.");
+    toast.info("Verificando conexão com o servidor backend...");
   }
 
   return (
     <div className="space-y-8 pb-12">
+      {isBackendOffline && (
+        <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-500/20 text-amber-400">
+                <ServerOff className="h-5 w-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h4 className="text-xs font-semibold uppercase tracking-wider text-amber-300">
+                    Backend Offline (502 Bad Gateway)
+                  </h4>
+                  <Badge variant="warning" className="text-[10px] px-1.5 py-0">
+                    Modo Demonstração Ativo
+                  </Badge>
+                </div>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  A API em http://localhost:3333 não está respondendo. O painel está exibindo dados ilustrativos para validação visual completa.
+                </p>
+              </div>
+            </div>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRefreshAll}
+              className="gap-2 h-8 text-xs border-amber-500/40 hover:bg-amber-500/20 text-amber-200 shrink-0"
+            >
+              <RefreshCw className="h-3.5 w-3.5" />
+              <span>Reconectar Backend</span>
+            </Button>
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             <h1 className="text-2xl font-bold tracking-tight text-foreground">
               Central Operacional
             </h1>
-            <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span
+              className={`flex h-2.5 w-2.5 rounded-full ${
+                isBackendOffline
+                  ? "bg-amber-500 animate-pulse"
+                  : "bg-emerald-500 animate-pulse"
+              }`}
+            />
+            {isBackendOffline && (
+              <Badge variant="secondary" className="font-mono text-[10px]">
+                PREVIEW
+              </Badge>
+            )}
           </div>
           <p className="text-xs text-muted-foreground mt-1">
             Gestão em tempo real de boxes, ordens de serviço e faturamento da unidade
@@ -193,7 +279,11 @@ export function DashboardPage() {
 
           <Button
             size="sm"
-            onClick={() => toast.info("Fluxo de abertura rápida de OS disponível nos boxes livres abaixo.")}
+            onClick={() =>
+              toast.info(
+                "Fluxo de abertura rápida disponível selecionando um box livre abaixo."
+              )
+            }
             className="gap-2 h-9 text-xs font-semibold shadow-md shadow-primary/20"
           >
             <PlusCircle className="h-4 w-4" />
@@ -204,15 +294,15 @@ export function DashboardPage() {
 
       <KpiMetricsGrid
         metrics={metrics}
-        isLoading={isLoadingOrders}
-        isError={isErrorOrders}
+        isLoading={!isBackendOffline && isLoadingOrders}
+        isError={false}
       />
 
       <LiveBoxesMonitor
         boxes={boxes}
         activeWorkOrders={activeOrders}
-        isLoading={isLoadingBoxes}
-        isError={isErrorBoxes}
+        isLoading={!isBackendOffline && isLoadingBoxes}
+        isError={false}
         onAdvanceStatus={(order) => {
           const next =
             order.status === "CHECK_IN"
@@ -239,9 +329,13 @@ export function DashboardPage() {
 
       <TodayOrdersTable
         orders={orders}
-        pagination={workOrdersData?.pagination}
-        isLoading={isLoadingOrders}
-        isError={isErrorOrders}
+        pagination={
+          isBackendOffline
+            ? { page: 1, limit: 10, total: orders.length, totalPages: 1 }
+            : workOrdersData?.pagination
+        }
+        isLoading={!isBackendOffline && isLoadingOrders}
+        isError={false}
         onAdvanceStatus={handleAdvanceStatus}
         onRetry={refetchOrders}
       />

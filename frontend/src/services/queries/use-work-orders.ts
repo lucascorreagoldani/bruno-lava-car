@@ -19,7 +19,8 @@ export function useWorkOrdersQuery(params: WorkOrdersQueryParams = {}) {
   return useQuery<PaginatedResult<WorkOrder>>({
     queryKey: ["work-orders", params],
     queryFn: () => apiClient.get<PaginatedResult<WorkOrder>>("/work-orders", { params }),
-    refetchInterval: 10000
+    retry: 1,
+    refetchInterval: (query) => (query.state.status === "error" ? false : 10000)
   });
 }
 

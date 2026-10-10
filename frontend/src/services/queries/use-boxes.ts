@@ -7,7 +7,8 @@ export function useBoxesQuery() {
   return useQuery<PaginatedResult<Box>>({
     queryKey: ["boxes"],
     queryFn: () => apiClient.get<PaginatedResult<Box>>("/boxes", { params: { limit: 50 } }),
-    refetchInterval: 10000
+    retry: 1,
+    refetchInterval: (query) => (query.state.status === "error" ? false : 10000)
   });
 }
 

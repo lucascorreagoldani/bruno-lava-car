@@ -1,5 +1,5 @@
 import { pgTable, integer, varchar, text, timestamp, index } from "drizzle-orm/pg-core";
-import { boxStatusEnum, BoxStatus } from "./enums/box-status.js";
+import { boxStatusEnum, type BoxStatus } from "./enums/box-status.js";
 
 export const boxes = pgTable("boxes", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
@@ -15,4 +15,4 @@ export const boxes = pgTable("boxes", {
 
 export type Box = typeof boxes.$inferSelect;
 export type NewBox = typeof boxes.$inferInsert;
-export { BoxStatus };
+export type { BoxStatus };
