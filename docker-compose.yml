@@ -67,6 +67,19 @@ services:
     networks:
       - lava_car_network
 
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: bruno-lava-car-frontend
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    networks:
+      - lava_car_network
+    depends_on:
+      - api
+
   npm:
     image: jc21/nginx-proxy-manager:latest
     container_name: bruno-lava-car-npm
@@ -84,6 +97,7 @@ services:
       - lava_car_network
     depends_on:
       - api
+      - frontend
 
 volumes:
   postgres_data:
