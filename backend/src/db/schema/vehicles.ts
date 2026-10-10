@@ -29,4 +29,4 @@ export const vehiclesRelations = relations(vehicles, ({ one }) => ({
 
 export type Vehicle = typeof vehicles.$inferSelect;
 export type NewVehicle = typeof vehicles.$inferInsert;
-export { type VehicleCategory, vehicleCategoryEnum } from "./enums/index.js";
+export { VehicleCategory, vehicleCategoryEnum } from "./enums/index.js";
